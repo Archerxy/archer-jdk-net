@@ -1,0 +1,23 @@
+target/*
+crt/*
+logs/*
+mvn.txt
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+.mvn.txt
+
+### VS Code ###
+.vscode/
