@@ -1,4 +1,4 @@
-package com.archer.jdknet.http;
+package com.archer.jdknet.http.client;
 
 import javax.net.ssl.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;

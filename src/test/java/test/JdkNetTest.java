@@ -16,8 +16,8 @@ import com.archer.jdknet.http.HttpRequest;
 import com.archer.jdknet.http.HttpResponse;
 import com.archer.jdknet.http.HttpStatus;
 import com.archer.jdknet.http.HttpWrappedHandler;
-import com.archer.jdknet.http.NioRequest;
-import com.archer.jdknet.http.NioResponse;
+import com.archer.jdknet.http.client.NioRequest;
+import com.archer.jdknet.http.client.NioResponse;
 import com.archer.jdknet.http.multipart.Multipart;
 import com.archer.jdknet.http.multipart.MultipartParser;
 
@@ -65,13 +65,17 @@ public class JdkNetTest {
 	}
 
 	public static void main(String[] args) {
-		httpTest();
-//		try {
+//		httpTest();
+		try {
 //			Thread.sleep(1000);
-//			NioResponse res = NioRequest.get("http://127.0.0.1:8888/nihao?name=x&id=徐熠&t=12");
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+			for(int i = 0; i < 50; i++) {
+				NioResponse res = NioRequest.get("https://api.weixin.qq.com/sns/jscode2session?appid=wx7044ac0149b3f437&secret=1fde4b8778750f7a3267bb8dfa23fe9e&js_code=0d3off1w3nyLo13j411w3L9cJQ1off1R&grant_type=authorization_code");
+				System.out.println(res.getStatus());
+				System.out.println(new String(res.getBody()));
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
