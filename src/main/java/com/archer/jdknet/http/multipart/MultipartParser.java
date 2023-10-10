@@ -22,13 +22,11 @@ public class MultipartParser {
     private static final int HEAD_START = 2;
 
     public static List<Multipart> parse(HttpRequest req) {
-    	System.out.println("content-type = " + req.getContentType());
     	if(!req.getContentType().startsWith(MULTIPART)) {
     		throw new HttpException(HttpStatus.BAD_REQUEST.getCode(), 
     				"invalid mulipart formdata content-type:" + req.getContentType());
     	}
         String sep = "--"+req.getContentType().substring(MULTIPART.length()).trim();
-    	System.out.println("sep = " + sep);
         return parse(sep, req.getContent());
     }
     private static List<Multipart> parse(String sepStr, byte[] content) {

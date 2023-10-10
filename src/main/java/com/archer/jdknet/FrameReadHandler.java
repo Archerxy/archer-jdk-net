@@ -78,10 +78,10 @@ public class FrameReadHandler extends Handler {
 					int dataLen = getFrameLength(in, off, len) + headLen;
 					data = new byte[dataLen];
 					pos = 0;
-					readCount = dataLen > in.avaliable() ? in.avaliable() : dataLen;
+					readCount = dataLen > in.available() ? in.available() : dataLen;
 				} else {
 					int remain = data.length - pos;
-					readCount = remain > in.avaliable() ? in.avaliable() : remain;
+					readCount = remain > in.available() ? in.available() : remain;
 				}
 				in.read(data, pos, readCount);
 				pos += readCount;

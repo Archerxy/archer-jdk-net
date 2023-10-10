@@ -110,9 +110,9 @@ final class SslStuff {
                 	return null;
                 }
                 running = true;
-                while(read.avaliable() > 0) {
+                while(read.available() > 0) {
                 	int len = getTlsPacketLength(read.byteAt(3), read.byteAt(4)) + 5;
-                	if(len > read.avaliable()) {
+                	if(len > read.available()) {
                 		break ;
                 	}
                 	stuff.peerNetData.clear();
@@ -141,7 +141,7 @@ final class SslStuff {
                         }
                     }
                 }
-                if(bytes.avaliable() > 0) {
+                if(bytes.available() > 0) {
                 	Bytes out = bytes;
                 	bytes = new Bytes();
                     return out;

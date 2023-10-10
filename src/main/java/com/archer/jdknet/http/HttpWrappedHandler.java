@@ -21,7 +21,7 @@ public abstract class HttpWrappedHandler extends Handler {
 
 	@Override
 	public void onRead(Channel channel, Bytes in) throws Exception {
-		if(in.avaliable() <= 0) {
+		if(in.available() <= 0) {
 			return ;
 		}
 		

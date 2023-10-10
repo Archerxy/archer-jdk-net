@@ -298,7 +298,6 @@ public class HttpRequest {
 						contentEncoding = contentEncoding
 								.substring(DEFAULT_ENCODING_KEY.length() + 1).trim();
 					}
-					contentType = contentType.substring(0, sem).trim();
 				}
 			}
 			while(i < msg.length && msg[i] != ENTER) {
@@ -388,7 +387,7 @@ public class HttpRequest {
 		try {
 			if(isChunked) {
 				int s = 0, len = 0, state = CHUNKED_LEN;
-				if(remainBody.avaliable() > 0) {
+				if(remainBody.available() > 0) {
 					remainBody.write(content);
 					content = remainBody.readAll();
 				}
