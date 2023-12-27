@@ -23,7 +23,12 @@ public class ServerChannel {
     private int port;
     
     public ServerChannel() {
-        worker = new HandlerWorker();
+        worker = new HandlerWorker(1, 1);
+        workerThread = new ServerWorkerThread(this);
+    }
+    
+    public ServerChannel(int coreThreads, int maxThreads) {
+        worker = new HandlerWorker(coreThreads, maxThreads);
         workerThread = new ServerWorkerThread(this);
     }
     
