@@ -7,17 +7,15 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManager;
-
-import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
 import com.archer.jdknet.util.CertAndKeyUtil;
 

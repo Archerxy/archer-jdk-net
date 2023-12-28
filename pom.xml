@@ -4,7 +4,7 @@
 
   <groupId>com.archer</groupId>
   <artifactId>jdk-net</artifactId>
-  <version>1.1.7</version>
+  <version>1.2.0</version>
   <packaging>jar</packaging>
 
   <name>archer-jdk-net</name>
@@ -22,7 +22,7 @@
   </properties>
   
   <build>
-    <finalName>archer-jdk-net-1.1.7</finalName>
+    <finalName>archer-jdk-net-1.2.0</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
