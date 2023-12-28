@@ -261,4 +261,15 @@ public final class Bytes {
 		write(out.read(len));
 		return len;
 	}
+	
+	protected static Bytes wrapByteBuffer(ByteBuffer buffer) {
+		if(!buffer.hasRemaining()) {
+			return new Bytes();
+		}
+		byte[] bytes = new byte[buffer.remaining()];
+		for(int i = 0; i < bytes.length; i++) {
+			bytes[i] = buffer.get();
+		}
+		return new Bytes(bytes);
+	}
 }

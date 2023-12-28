@@ -182,7 +182,6 @@ public class SslHandler extends Handler {
                 throw new IllegalStateException("Invalid SSL status: " + handshakeStatus);
             }
         }
-        System.out.println("handshake done.");
         return true;
     }
 
@@ -196,12 +195,10 @@ public class SslHandler extends Handler {
 		}
 	}
 
-	static volatile int count = 0;
 	
 	@Override
 	public void onRead(Channel channel, Bytes in) throws Exception {
 		SslStuff stuff = getBufSet(channel);
-		
 		Bytes read = stuff.sslMessage.unwrap(channel, stuff, in);
 		if(read != null) {
 			toNextOnRead(channel, read);
@@ -236,7 +233,6 @@ public class SslHandler extends Handler {
 		SslStuff stuff = sslBufferCache.getOrDefault(channel, null);
 		if(stuff == null) {
 			SSLEngine engine = context.createSSLEngine();
-			System.out.println("client channel: supported ciphers = " + Arrays.toString(engine.getEnabledCipherSuites()));
 			engine.setUseClientMode(channel.isClientMode());
 			stuff = new SslStuff(Bytes.BUFFER_SIZE, engine.getSession().getPacketBufferSize(), engine);
 			sslBufferCache.put(channel, stuff);

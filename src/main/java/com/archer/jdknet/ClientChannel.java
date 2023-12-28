@@ -11,10 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientChannel {
 
-	private static final int PROCESSORS = Runtime.getRuntime().availableProcessors();
-	protected static final int CORE_THREAD_SIZE = PROCESSORS > 1 ? 2 : PROCESSORS;
-	protected static final int MAX_THREAD_SIZE = PROCESSORS << 2;
-
 	private static ClientWorkerThread workerThread;
 	private static Selector selector;
 	private static volatile boolean running = false;
@@ -36,7 +32,7 @@ public class ClientChannel {
 	}
 	
 	public ClientChannel initHandlerWorker() {
-		initHandlerWorker(CORE_THREAD_SIZE, MAX_THREAD_SIZE);
+		this.worker = new HandlerWorker();
 		return this;
 	}
 	
@@ -153,9 +149,6 @@ public class ClientChannel {
     		if (sk.isReadable()) {
     			worker.onRead(sk);
             }
-    		if (sk.isWritable()) {
-    			worker.onWrite(sk);
-            }
     	} catch(CancelledKeyException ignore) {
     		worker.onClose(sk);
     	}
@@ -168,7 +161,6 @@ public class ClientChannel {
             try {
             	running = true;
                 while (running) {
-                	
                     if(selector.select() <= 0) {
                     	continue;
                     }

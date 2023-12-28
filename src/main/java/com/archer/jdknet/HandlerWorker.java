@@ -13,39 +13,43 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 final class HandlerWorker {
 	
-	private static final int WORKER_POOL_CORE_SIZE = Runtime.getRuntime().availableProcessors();
-    private static final int WORKER_POOL_MAX_SIZE = WORKER_POOL_CORE_SIZE * 2;
     private static final int KEEP_ALIVE_TIME = 10_000;
     private static ThreadPoolExecutor workerPool;
-    private static AtomicInteger workerCount = new AtomicInteger(0);
-
-
-	protected static final HandlerWorker INSTANCE = new HandlerWorker(
-			ClientChannel.CORE_THREAD_SIZE, ClientChannel.MAX_THREAD_SIZE
-			);
+    private static AtomicInteger workerCount;
 	
     private Handler head;
     private Handler tail;
     
     private int coreThreads, maxThreads;
+    private boolean enableThreads;
     
     public HandlerWorker() {
-    	this(WORKER_POOL_CORE_SIZE, WORKER_POOL_MAX_SIZE);
+    	this(0, 0, false);
     }
     
     public HandlerWorker(int coreThreads, int maxThreads) {
-    	this.coreThreads = coreThreads;
-    	this.maxThreads = maxThreads;
-    	if(workerPool == null) {
-    		workerPool = new ThreadPoolExecutor(
-            		coreThreads,
-            		maxThreads,
-            		KEEP_ALIVE_TIME,
-                    TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<Runnable>(),
-                    Executors.defaultThreadFactory());
+    	this(coreThreads, maxThreads, true);
+    }
+    
+    public HandlerWorker(int coreThreads, int maxThreads, boolean enableThreads) {
+    	this.enableThreads = enableThreads;
+    	if(enableThreads) {
+        	this.coreThreads = coreThreads;
+        	this.maxThreads = maxThreads;
+        	if(workerPool == null) {
+        		workerPool = new ThreadPoolExecutor(
+                		coreThreads,
+                		maxThreads,
+                		KEEP_ALIVE_TIME,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<Runnable>(),
+                        Executors.defaultThreadFactory());
+        	}
+        	workerCount = new AtomicInteger(1);
+    	} else {
+        	this.coreThreads = 0;
+        	this.maxThreads = 0;
     	}
-    	workerCount.incrementAndGet();
     }
     
     protected void onAccept(SelectionKey serverKey) {
@@ -81,35 +85,22 @@ final class HandlerWorker {
         	if(!ch.isOpen()) {
         		return ;
         	}
-        	int read = ch.readInternal();
-        	if(read > 0) {
-            	workerPool.submit(() -> {
-	    			if(head != null) {
-	    				try {
-							head.onRead(ch, ch.readBytes());
-						} catch (Exception e) {
-				        	onError(clientKey, e);
-						}
-	    			}
-            	});
-        	} else if(read < 0) {
+        	Bytes readBytes = ch.readInternal();
+        	if(readBytes != null && readBytes.available() > 0) {
+        		if(this.enableThreads) {
+                	workerPool.submit(() -> {
+                		handle(clientKey, ch, readBytes);
+                	});
+        		} else {
+            		handle(clientKey, ch, readBytes);
+        		}
+        	}
+        	if(!ch.isOpen()) {
         		ch.prepareClose();
         		onClose(clientKey);
         	}
         } catch (Exception ex) {
         	onError(clientKey, ex);
-        }
-    }
- 
-    protected void onWrite(SelectionKey clientKey) {
-        try {
-        	Channel ch = getChannel(clientKey);
-        	if(!ch.isOpen()) {
-        		return ;
-        	}
-	    	ch.writeInternal();
-        } catch (Exception e) {
-        	onError(clientKey, e);
         }
     }
     
@@ -179,26 +170,43 @@ final class HandlerWorker {
     }
     
     public void close() {
-    	int workers = workerCount.decrementAndGet();
-    	if(workers <= 0) {
-        	workerPool.shutdown();
+    	if(this.enableThreads) {
+        	int workers = workerCount.decrementAndGet();
+        	if(workers <= 0) {
+            	workerPool.shutdown();
+        	}
     	}
     }
     
+    private void handle(SelectionKey clientKey, Channel ch, Bytes readBytes) {
+		if(head != null) {
+			try {
+				head.onRead(ch, readBytes);
+			} catch (Exception e) {
+	        	onError(clientKey, e);
+			}
+		}
+    }
+    
     protected boolean isAlive() {
-    	return !workerPool.isTerminated();
+    	if(enableThreads) {
+        	return !workerPool.isTerminated();
+    	}
+    	return true;
     }
     
     protected void reStart() {
-    	if(workerPool.isTerminated()) {
-    		workerPool = new ThreadPoolExecutor(
-            		coreThreads,
-            		maxThreads,
-            		KEEP_ALIVE_TIME,
-                    TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<Runnable>(),
-                    Executors.defaultThreadFactory());
-    		workerCount.incrementAndGet();
+    	if(this.enableThreads) {
+        	if(workerPool.isTerminated()) {
+        		workerPool = new ThreadPoolExecutor(
+                		coreThreads,
+                		maxThreads,
+                		KEEP_ALIVE_TIME,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<Runnable>(),
+                        Executors.defaultThreadFactory());
+        		workerCount.incrementAndGet();
+        	}
     	}
     }
     

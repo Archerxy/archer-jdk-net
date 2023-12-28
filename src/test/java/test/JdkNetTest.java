@@ -18,6 +18,8 @@ import com.archer.jdknet.http.HttpStatus;
 import com.archer.jdknet.http.HttpWrappedHandler;
 import com.archer.jdknet.http.client.NioRequest;
 import com.archer.jdknet.http.client.NioResponse;
+import com.archer.jdknet.http.client.Request;
+import com.archer.jdknet.http.client.Response;
 import com.archer.jdknet.http.multipart.Multipart;
 import com.archer.jdknet.http.multipart.MultipartParser;
 
@@ -65,17 +67,24 @@ public class JdkNetTest {
 	}
 
 	public static void main(String[] args) {
-//		httpTest();
 		try {
-//			Thread.sleep(1000);
-			for(int i = 0; i < 50; i++) {
-				NioResponse res = NioRequest.get("https://api.weixin.qq.com/sns/jscode2session?appid=wx7044ac0149b3f437&secret=1fde4b8778750f7a3267bb8dfa23fe9e&js_code=0d3off1w3nyLo13j411w3L9cJQ1off1R&grant_type=authorization_code");
+			for(int i = 0; i < 10; i++) {
+				Response res = Request.get("https://api.weixin.qq.com/sns/jscode2session?appid=wx7044ac0149b3f437&secret=1fde4b8778750f7a3267bb8dfa23fe9e&js_code=0d3off1w3nyLo13j411w3L9cJQ1off1R&grant_type=authorization_code");
 				System.out.println(res.getStatus());
 				System.out.println(new String(res.getBody()));
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+//		try {
+//			for(int i = 0; i < 10; i++) {
+//				NioResponse res = NioRequest.get("https://api.weixin.qq.com/sns/jscode2session?appid=wx7044ac0149b3f437&secret=1fde4b8778750f7a3267bb8dfa23fe9e&js_code=0d3off1w3nyLo13j411w3L9cJQ1off1R&grant_type=authorization_code");
+//				System.out.println(res.getStatus());
+//				System.out.println(new String(res.getBody()));
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 }

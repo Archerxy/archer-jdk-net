@@ -12,7 +12,7 @@ public class Channel {
 	private static final int READ_BUF_SIZE = 1024*1024;
 	private static final int WRITE_BUF_SIZE = 1024*1024;
 	
-    private static final int READ_TRY = 3;
+    private static final int READ_TRY = 17;
 	
     private String id;
     
@@ -21,9 +21,6 @@ public class Channel {
 	
     private ByteBuffer peerReadBuf;
 	private ByteBuffer peerWriteBuf;
-	
-	private Bytes readBytes;
-	private Bytes writeBytes;
 	
 	private SelectionKey key;
 	private HandlerWorker worker;
@@ -44,8 +41,6 @@ public class Channel {
 		this.worker = worker;
 		this.peerReadBuf = ByteBuffer.allocateDirect(READ_BUF_SIZE);
 		this.peerWriteBuf = ByteBuffer.allocateDirect(WRITE_BUF_SIZE);
-		this.readBytes = new Bytes();
-		this.writeBytes = new Bytes();
 		this.state = ChannelState.OPEN;
 		this.clientMode = false;
 		peerReadBuf.flip();
@@ -64,9 +59,9 @@ public class Channel {
 		return worker;
 	}
 	
-	protected Bytes readBytes() {
-		return readBytes;
-	}
+//	protected Bytes readBytes() {
+//		return readBytes;
+//	}
 	
 	protected void clientMode(boolean mode) {
 		clientMode = mode;
@@ -110,11 +105,9 @@ public class Channel {
 		}
 		readLock.lock();
 		try {
-			if(readBytes.available() <= 0) {
-				int r = readInternal();
-				if(r <= 0) {
-					return r;
-				}
+			Bytes readBytes = readInternal();
+			if(readBytes == null) {
+				return 0;
 			}
 			int count = readBytes.writeToBytes(in);
 			return count;
@@ -130,13 +123,21 @@ public class Channel {
 		if(!isOpen()) {
 			return ;
 		}
+
 		writeLock.lock();
 		try {
-			writeBytes.readFromBytes(out);
-			key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
-			key.selector().wakeup();
+			SocketChannel client = (SocketChannel) key.channel();
+			while(out.available() > 0) {
+				peerWriteBuf.clear();
+				out.writeToByteBuffer(peerWriteBuf);
+				peerWriteBuf.flip();
+				key.interestOps(SelectionKey.OP_READ);
+				while(peerWriteBuf.hasRemaining()) {
+					client.write(peerWriteBuf);
+				}	
+			}
 		} finally {
-			writeLock.unlock();
+			writeLock.unlock();	
 		}
 	}
 	
@@ -152,48 +153,25 @@ public class Channel {
 		return id;
 	}
 	
-	protected int readInternal() throws IOException {
-		int count = 0, readCount = 0;
+	protected Bytes readInternal() throws IOException {
+		int count = 0;
 		SocketChannel client = (SocketChannel) key.channel();
-
 		readLock.lock();
 		try {
 			peerReadBuf.clear();
 			while(count < READ_TRY && peerReadBuf.hasRemaining()) {
 				int readBytes = client.read(peerReadBuf);
-				if(readBytes > 0) {
-					readCount += readBytes;
-				} else if (readBytes == 0) {
+				if (readBytes == 0) {
 					count++;
-				} else {
-					return -1;
+				} else if(readBytes < 0) {
+					this.prepareClose();
+					break;
 				}
 			}
 			peerReadBuf.flip();
-			if(peerReadBuf.hasRemaining()) {
-				readBytes.readFromDirectBuffer(peerReadBuf);
-			}
-			return readCount;
+			return Bytes.wrapByteBuffer(peerReadBuf);
 		} finally {
 			readLock.unlock();
-		}
-	}
-	
-	protected void writeInternal() throws IOException {
-		SocketChannel client = (SocketChannel) key.channel();
-		writeLock.lock();
-		try {
-			while(writeBytes.available() > 0) {
-				writeBytes.writeToDirectBuffer(peerWriteBuf);
-				peerWriteBuf.flip();
-				while(peerWriteBuf.hasRemaining()) {
-					client.write(peerWriteBuf);
-				}
-				peerWriteBuf.clear();
-			}
-			key.interestOps(SelectionKey.OP_READ);
-		} finally {
-			writeLock.unlock();	
 		}
 	}
 	

@@ -119,9 +119,6 @@ public class ServerChannel {
     		if (sk.isReadable()) {
     			worker.onRead(sk);
             }
-    		if (sk.isWritable()) {
-    			worker.onWrite(sk);
-            }
     	} catch(CancelledKeyException ignore) {
     		worker.onClose(sk);
     	}

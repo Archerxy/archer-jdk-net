@@ -1,7 +1,9 @@
-target/*
-crt/*
-logs/*
+target/**
+crt/**
+logs/**
+src/test/**
 mvn.txt
+
 
 ### STS ###
 .apt_generated
