@@ -88,11 +88,11 @@ final class SslStuff {
     	
         private Bytes bytes;
         
-        private volatile boolean running;
+//        private volatile boolean running;
     	
     	public SslMessage() {
     		bytes = new Bytes();
-    		running = false;
+//    		running = false;
     	}
     	
         
@@ -100,16 +100,13 @@ final class SslStuff {
             SSLEngine engine = stuff.engine;
             int appBufferSize = engine.getSession().getApplicationBufferSize();
             int packetBufferSize = engine.getSession().getPacketBufferSize();
-            
+
+            packetLock.lock();
             try {
-                if(running) {
-                	return null;
-                }
-                packetLock.lock();
-                if(running) {
-                	return null;
-                }
-                running = true;
+//                if(running) {
+//                	return null;
+//                }
+//                running = true;
                 while(read.available() > 0) {
                 	int len = getTlsPacketLength(read.byteAt(3), read.byteAt(4)) + 5;
                 	if(len > read.available()) {
@@ -133,7 +130,7 @@ final class SslStuff {
                         	stuff.peerNetData = handleBufferUnderflow(stuff.peerNetData, packetBufferSize);
                             break;
                         case CLOSED:
-                    		System.err.println(Thread.currentThread().getId()+"ssl closed");
+                    		System.err.println(Thread.currentThread().getName()+": ssl closed");
                             closeConnection(channel, stuff);
                             break;
                         default:
@@ -148,8 +145,8 @@ final class SslStuff {
                 }
                 return null;
             } finally {
+//                running = false;
                 packetLock.unlock();
-                running = false;
             }
         }
 
