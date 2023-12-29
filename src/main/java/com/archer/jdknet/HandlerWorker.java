@@ -85,7 +85,14 @@ final class HandlerWorker {
         	if(!ch.isOpen()) {
         		return ;
         	}
-        	Bytes readBytes = ch.readInternal();
+        	Bytes readBytes;
+        	try {
+            	readBytes = ch.readInternal();
+        	} catch (IOException ex) {
+        		ch.prepareClose();
+        		onClose(clientKey);
+        		return ;
+            }
         	if(readBytes != null && readBytes.available() > 0) {
         		if(this.enableThreads) {
                 	workerPool.submit(() -> {
@@ -99,8 +106,8 @@ final class HandlerWorker {
         		ch.prepareClose();
         		onClose(clientKey);
         	}
-        } catch (Exception ex) {
-        	onError(clientKey, ex);
+        }  catch(Exception e) {
+        	onError(clientKey, e);
         }
     }
     
